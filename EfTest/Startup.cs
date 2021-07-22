@@ -1,0 +1,69 @@
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using EfTest.Data;
+
+namespace EfTest
+{
+    public class Startup
+    {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddRazorPages();
+            
+            //SQL Server
+            //services.AddDbContext<SchoolContext>(options =>
+            //        options.UseSqlServer(Configuration.GetConnectionString("SchoolContext")));
+            
+            //Sqlite
+            var folder = Environment.SpecialFolder.LocalApplicationData;
+            var path = Environment.GetFolderPath(folder);
+            string DbPath = $"{path}{System.IO.Path.DirectorySeparatorChar}School.db";
+            services.AddDbContext<SchoolContext>(options =>
+                    options.UseSqlite($"Data Source={DbPath}"));
+
+            //데이터베이스 예외 필터 추가
+            //Install-Package Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
+            services.AddDatabaseDeveloperPageExceptionFilter();
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+            }
+
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapRazorPages();
+            });
+        }
+    }
+}
